@@ -34,16 +34,20 @@ for i=1:Nsamples
     epr = (data(i).h - data(i).zi)/2/data(i).h;
     Umag = raw(i).WSPD(1:Nz);
 
-    Tpot = data(i).TEMP(1:Nz).*(100000./data(i).PRESS(1:Nz)).^0.286;
-    for j=3:Nz-1
-        if (Tpot(j+1)-Tpot(j))>=0
-            break
-        end
-    end
-    p = polyfit(z(1:j),Tpot(1:j),1);
+%    Tpot = data(i).TEMP(1:Nz).*(100000./data(i).PRESS(1:Nz)).^0.286;
+%    for j=3:Nz-1
+%        if (Tpot(j+1)-Tpot(j))>=0
+%            break
+%        end
+%    end
+    Tpot = data(i).TEMP(Nz:end).*(100000./data(i).PRESS(Nz:end)).^0.286; % change to Tpot of free atmosphere
+    p = polyfit(data(i).GZ(Nz:end),Tpot,1);                              % "
+%    p = polyfit(z(1:j),Tpot(1:j),1);
     dTPdz = p(1);
-    Tpot0 = p(2);
-    N = imag(sqrt(9.80665/Tpot0*dTPdz));
+    Tpot0 = mean(Tpot);                                                  % "
+%    Tpot0 = p(2);
+    N = sqrt(9.80665/Tpot0*dTPdz);
+    N = sqrt(N*conj(N));
     Zi = N/f;
 
     us = bestFricVel(f,z0,Zi,k,epr,xi,Umag);
@@ -108,7 +112,6 @@ for i=1:Nsamples
     Nz = length(z);
     xi = z/h;
     Umag = raw(i).WSPD(1:Nz);
-    Zi = 51 + (Zi - 1245.3)/(1339.9 - 1245.3)*(89 - 51);
     us = bestFricVel(f,z0,Zi,k,epr,xi,Umag);
     Ro = us/f/z0;
     model = getModel(Ro,Zi,k,epr,z0,xi);
